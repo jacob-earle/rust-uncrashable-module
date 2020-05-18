@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #This short script will install all of the necessary dependencies to compile this project
 #A reboot will necessary in order to change the default kernel that will be downloaded
 #Should be run on a fresh install of Ubuntu Bionic 18.04 without rust installed
