@@ -3,9 +3,12 @@
 
 extern crate alloc;
 use alloc::string::String;
-use core::sync::atomic::{AtomicUsize, Ordering};
 
-use linux_kernel_module::{self, cstr};
+use core::sync::atomic::{AtomicUsize};
+
+
+
+use linux_kernel_module::{self, cstr, println};
 
 struct CycleFile;
 
@@ -25,14 +28,7 @@ impl linux_kernel_module::file_operations::Read for CycleFile {
         buf: &mut linux_kernel_module::user_ptr::UserSlicePtrWriter,
         offset: u64,
     ) -> linux_kernel_module::KernelResult<()> {
-        for c in b"123456789"
-            .iter()
-            .cycle()
-            .skip((offset % 9) as _)
-            .take(buf.len())
-        {
-            buf.write(&[*c])?;
-        }
+        buf.write(b"You read me!")?;
         return Ok(());
     }
 }
@@ -84,7 +80,7 @@ impl linux_kernel_module::file_operations::Read for WriteFile {
         buf: &mut linux_kernel_module::user_ptr::UserSlicePtrWriter,
         _offset: u64,
     ) -> linux_kernel_module::KernelResult<()> {
-        let val = String::from("You read me!");
+        let val = String::from("You read me!\n");
         buf.write(val.as_bytes())?;
         return Ok(());
     }
@@ -97,7 +93,7 @@ impl linux_kernel_module::file_operations::Write for WriteFile {
         _offset: u64,
     ) -> linux_kernel_module::KernelResult<()> {
         let data = buf.read_all()?;
-        self.written.fetch_add(data.len(), Ordering::SeqCst);
+        println!("Read this: {:?}", data);
         return Ok(());
     }
 }
@@ -109,7 +105,7 @@ struct ChrdevTestModule {
 impl linux_kernel_module::KernelModule for ChrdevTestModule {
     fn init() -> linux_kernel_module::KernelResult<Self> {
         let chrdev_registration =
-            linux_kernel_module::chrdev::builder(cstr!("chrdev-tests"), 0..3)?
+            linux_kernel_module::chrdev::builder(cstr!("uncrashablemodule"), 0..3)?
                 .register_device::<CycleFile>()
                 .register_device::<SeekFile>()
                 .register_device::<WriteFile>()
