@@ -1,87 +1,43 @@
-# Linux kernel modules in safe Rust
-
-This is a framework for writing loadable Linux kernel modules in Rust,
-using safe abstractions around kernel interfaces and primitives.
-
-For more information on the motivation and goals for this project, check
-out [our presentation at Linux Security Summit North America
-2019](https://ldpreload.com/p/kernel-modules-in-rust-lssna2019.pdf)
-and the [video on YouTube](https://www.youtube.com/watch?v=RyY01fRyGhM).
-We're immediately focusing on making this project viable for out-of-tree
-modules, but we also see this project as a testing ground for whether
-in-tree components could be written in Rust.
-
-There is a simple demo module in the hello-world directory, as well as
-various other examples in the tests/ directory.
-
-## Design
-
-We run [bindgen](https://github.com/rust-lang/rust-bindgen) on the
-kernel headers to generate automatic Rust FFI bindings. bindgen is
-powered by [Clang](https://clang.llvm.org), so we use use the kernel's
-own build system to determine the appropriate CFLAGS (see
-`kernel-cflags-finder`) and pass them to bindgen (see `build.rs`). Then we
-write safe bindings to these types (see the various files inside `src/`).
-
-Each kernel module in Rust lives in a `staticlib` crate, which generates
-a `.a` file. We pass this object to the Linux kernel's own module build
-system for linking into a `.ko`.
-
-The kernel is inherently multi-threaded: kernel resources can be
-accessed from multiple userspace processes at once, which causes
-multiple threads of execution inside the kernel to handle system calls
-(or interrupts). Therefore, the `KernelModule` type is
-[`Sync`](https://doc.rust-lang.org/book/ch16-04-extensible-concurrency-sync-and-send.html),
-so all data shared by a kernel module must be safe to access
-concurrently (such as by implementing locking).
-
-## System requirements
-
-We're currently only running CI on Linux 4.15 (Ubuntu Xenial) on amd64,
-although we try to keep support for newer (and perhaps older) kernels
-working. Other architectures should work but are untested - see
-[#112](https://github.com/fishinabarrel/linux-kernel-module-rust/issues/112)
-for expected status.
-
-You'll need to have [Rust](https://www.rust-lang.org) - in particular
-Rust nightly, as we use [some unstable
-features](https://github.com/fishinabarrel/linux-kernel-module-rust/issues/41) -
-and [Clang](https://clang.llvm.org) installed. You need LLVM/Clang 3.9
-or higher [to bind constants
-properly](https://github.com/rust-lang/rust-bindgen/issues/1316). If
-you're running kernel 5.0 or newer, [you'll need Clang
-9](https://github.com/fishinabarrel/linux-kernel-module-rust/issues/123)
-(released September 2019), which adds support for `asm goto`.
-You may need to set the `CLANG` environment variable appropriately,
-e.g., `CLANG=clang-9`.
-
-## Building hello-world
-
-1. Install clang, kernel headers, and the `rust-src` and `rustfmt` components
-from `rustup`:
-
+# Uncrashable Rust Kernel Module
+This project aims to implement a kernel module for Linux in safe Rust that utilizes Intel CAT technology to isolate the program associated with a given PID in memory in the L3 cache of the host machine. In order to install the necessary dependencies for the project, as well as the appropriate nightly rust toolchain, simply run the setup script
 ```
-apt-get install llvm clang linux-headers-"$(uname -r)" # or the equivalent for your OS
-rustup component add --toolchain=nightly rust-src rustfmt
+chmod +x setup.sh
+./setup.sh
 ```
+in this directory on an installation of Ubuntu 20.04. After this, make sure that you have installed the linux headers corresponding to your kernel version.
 
-2. cd to one of the examples
-
+## Requirements
+1. An Intel Xeon processor with RDT (Resource Director Technology) + CAT (Cache Allocation Technology) enabled. To check whether your processor has the necessary features enabled, run
 ```
-cd hello-world
-```
+lscpu | grep Flags
+``` 
+and check that the output contains cat\_l3, cdp\_l3, occup\_llc, cqm\_mbm\_total, and cqm\_mbm\_local.
 
-3. Build the kernel module using the Linux kernel build system (kbuild), this
-will invoke `cargo` to build the Rust code
+2. A linux kernel compiled with the flag **CONFIG\_INTEL\_RDT=y** (for 4.x kernels) or **CONFIG\_X86\_CPU\_RESCTRL** (for 5.x kernels). However, this project was built and tested on the kernel version 4.19.125 on Ubuntu 20.04, and this version is recommended, as the Rust kernel module framework can be somewhat buggy with 5.0+ kernels.
 
+## Compiling and Running Project
+After running setup.sh and ensuring that all the dependencies (especially the proper kernel headers) were properly installed, enter the project directory and compile the kernel module with the following commands
 ```
+cd uncrashable_module
+make clean
+cargo clean
 make
+``` 
+If this worked correctly, you should see that the kernel module compiled as uncrashablemodule.ko. Then, to quickly load the kernel module and mount its associated character device, run the provided script
+```
+chmod +x load_module.sh
+./load_module.sh
+```
+To unload the module and remove the character device, run the provided script
+```
+chmod +x unload_module.sh
+./unload_module.sh
 ```
 
-4. Load and unload the module!
+## Additional Resources
+To learn more about Intel cat: [https://software.intel.com/content/www/us/en/develop/articles/introduction-to-cache-allocation-technology.html](https://software.intel.com/content/www/us/en/develop/articles/introduction-to-cache-allocation-technology.html)
 
-```
-sudo insmod helloworld.ko
-sudo rmmod helloworld
-dmesg | tail
-```
+Here is a paper describing the framework used to build Linux kernel modules in Rust: [https://mssun.me/assets/ares19securing.pdf](https://mssun.me/assets/ares19securing.pdf)
+
+Finally, the original code for the linux kernel module framework can be found in [this project](https://github.com/fishinabarrel/linux-kernel-module-rust) from fishinabarrel.
+
