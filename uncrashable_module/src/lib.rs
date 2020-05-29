@@ -92,8 +92,8 @@ impl linux_kernel_module::file_operations::Write for WriteFile {
         buf: &mut linux_kernel_module::user_ptr::UserSlicePtrReader,
         _offset: u64,
     ) -> linux_kernel_module::KernelResult<()> {
-        let data = buf.read_all()?;
-        println!("Read this: {:?}", data);
+        //let data = buf.read_all()?;
+        //println!("Read this: {:?}", data);
         return Ok(());
     }
 }
