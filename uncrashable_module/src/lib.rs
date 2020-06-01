@@ -72,17 +72,17 @@ impl linux_kernel_module::file_operations::Write for WriteFile {
     }
 }
 
-struct ChrdevTestModule {
+struct UncrashableModule {
     _chrdev_registration: linux_kernel_module::chrdev::Registration,
 }
 
-impl linux_kernel_module::KernelModule for ChrdevTestModule {
+impl linux_kernel_module::KernelModule for UncrashableModule {
     fn init() -> linux_kernel_module::KernelResult<Self> {
         let chrdev_registration =
             linux_kernel_module::chrdev::builder(cstr!("uncrashablemodule"), 0..1)?
                 .register_device::<WriteFile>()
                 .build()?;
-        Ok(ChrdevTestModule {
+        Ok(UncrashableModule {
             _chrdev_registration: chrdev_registration,
         })
     }
@@ -109,9 +109,9 @@ fn check_process_status(pid: i32) -> linux_kernel_module::KernelResult<bool> {
 
 
 linux_kernel_module::kernel_module!(
-    ChrdevTestModule,
-    author: "Fish in a Barrel Contributors",
-    description: "A module for testing character devices",
+    UncrashableModule,
+    author: "Jacob Earle",
+    description: "A module for pinning an application to the L3 cache using Intel Cat",
     license: "GPL"
 );
 
