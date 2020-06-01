@@ -3,5 +3,5 @@
 MODULE=uncrashablemodule
 CHRDEV=/dev/uncrashable
 sudo insmod $MODULE.ko
-sudo mknod $CHRDEV c `grep $MODULE /proc/devices | grep -o [0-9]*` 2 
+sudo mknod $CHRDEV c `grep $MODULE /proc/devices | grep -o [0-9]*` 0 
 sudo chmod a+w $CHRDEV

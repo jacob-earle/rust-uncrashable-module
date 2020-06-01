@@ -3,58 +3,12 @@
 
 extern crate alloc;
 use alloc::string::String;
-
+use alloc::vec::Vec;
 use core::sync::atomic::{AtomicUsize};
 
 
 
 use linux_kernel_module::{self, cstr, println};
-
-struct CycleFile;
-
-impl linux_kernel_module::file_operations::FileOperations for CycleFile {
-    const VTABLE: linux_kernel_module::file_operations::FileOperationsVtable =
-        linux_kernel_module::file_operations::FileOperationsVtable::builder::<Self>()
-            .read()
-            .build();
-
-    fn open() -> linux_kernel_module::KernelResult<Self> {
-        return Ok(CycleFile);
-    }
-}
-impl linux_kernel_module::file_operations::Read for CycleFile {
-    fn read(
-        &self,
-        buf: &mut linux_kernel_module::user_ptr::UserSlicePtrWriter,
-        offset: u64,
-    ) -> linux_kernel_module::KernelResult<()> {
-        buf.write(b"You read me!")?;
-        return Ok(());
-    }
-}
-
-struct SeekFile;
-
-impl linux_kernel_module::file_operations::FileOperations for SeekFile {
-    const VTABLE: linux_kernel_module::file_operations::FileOperationsVtable =
-        linux_kernel_module::file_operations::FileOperationsVtable::builder::<Self>()
-            .seek()
-            .build();
-
-    fn open() -> linux_kernel_module::KernelResult<Self> {
-        return Ok(SeekFile);
-    }
-}
-
-impl linux_kernel_module::file_operations::Seek for SeekFile {
-    fn seek(
-        &self,
-        _file: &linux_kernel_module::file_operations::File,
-        _offset: linux_kernel_module::file_operations::SeekFrom,
-    ) -> linux_kernel_module::KernelResult<u64> {
-        return Ok(1234);
-    }
-}
 
 struct WriteFile {
     written: AtomicUsize,
@@ -92,8 +46,28 @@ impl linux_kernel_module::file_operations::Write for WriteFile {
         buf: &mut linux_kernel_module::user_ptr::UserSlicePtrReader,
         _offset: u64,
     ) -> linux_kernel_module::KernelResult<()> {
-        //let data = buf.read_all()?;
-        //println!("Read this: {:?}", data);
+        let data = buf.read_all()?;
+        let string = vec_to_string(data);
+        let pid = match string.parse::<i32>(){
+            Ok(num) => num,
+            Err(_) => 
+            {
+                println!("Error: The value written to /dev/uncrashable is not a valid integer.");
+                -1
+            },
+        };
+        if let Ok(val) = check_process_status(pid) {
+            if val {
+                println!("{} is an active process in the default resource group.", pid);
+            }
+            else {
+                println!("{} is not an active process in the default resource group.", pid);
+            }
+        }
+        else {
+            println!("ERROR: Could not open /sys/fs/resctrl/tasks.");
+        }
+        //println!("Read this: {}", string);
         return Ok(());
     }
 }
@@ -105,9 +79,7 @@ struct ChrdevTestModule {
 impl linux_kernel_module::KernelModule for ChrdevTestModule {
     fn init() -> linux_kernel_module::KernelResult<Self> {
         let chrdev_registration =
-            linux_kernel_module::chrdev::builder(cstr!("uncrashablemodule"), 0..3)?
-                .register_device::<CycleFile>()
-                .register_device::<SeekFile>()
+            linux_kernel_module::chrdev::builder(cstr!("uncrashablemodule"), 0..1)?
                 .register_device::<WriteFile>()
                 .build()?;
         Ok(ChrdevTestModule {
@@ -115,6 +87,26 @@ impl linux_kernel_module::KernelModule for ChrdevTestModule {
         })
     }
 }
+
+//this function will take a vector of u8 integers and convert it into a string containing the
+//corresponding ascii characters
+fn vec_to_string (v: Vec<u8>) -> String {
+    let mut s = alloc::string::String::new();
+    for c in v{
+        s.push(c as char);
+    }
+    s
+}
+
+//This function will open the file /sys/fs/resctrl/tasks in order to check whether the process corresponding to pid is currently running and assigned to the default resctrl resource group
+fn check_process_status(pid: i32) -> linux_kernel_module::KernelResult<bool> {
+    //attempting to read and open /sys/fs/resctrl
+    //let contents = 
+
+    Ok(false)
+}
+
+
 
 linux_kernel_module::kernel_module!(
     ChrdevTestModule,
