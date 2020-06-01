@@ -4,3 +4,5 @@ MODULE=uncrashablemodule
 CHRDEV=/dev/uncrashable
 sudo rmmod $MODULE
 sudo rm $CHRDEV
+make clean
+cargo clean
