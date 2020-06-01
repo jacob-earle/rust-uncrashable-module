@@ -1,4 +1,4 @@
-#![feature(lang_items)]
+#![feature(lang_items, llvm_asm)]
 #![no_std]
 
 extern crate alloc;
@@ -53,20 +53,25 @@ impl linux_kernel_module::file_operations::Write for WriteFile {
             Err(_) => 
             {
                 println!("Error: The value written to /dev/uncrashable is not a valid integer.");
-                -1
+                return Ok(());
             },
         };
-        if let Ok(val) = check_process_status(pid) {
-            if val {
-                println!("{} is an active process in the default resource group.", pid);
-            }
-            else {
-                println!("{} is not an active process in the default resource group.", pid);
-            }
+        
+        //At this point, we will assume that the pid we have read corresponds to a valid process
+
+        //TODO: Use assembly instructions to write to RDT registers that control Intel CAT technologies to allocate an exclusive region of the cache for the process with the given PID
+
+
+        //Now, we will flush the entire cache using the wbinvd assembly instruction
+        //WBINVD is described here: https://www.felixcloutier.com/x86/wbinvd
+        #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+        unsafe{
+            llvm_asm!("WBINVD");
         }
-        else {
-            println!("ERROR: Could not open /sys/fs/resctrl/tasks.");
-        }
+
+        println!("Flushed cache!");
+
+
         //println!("Read this: {}", string);
         return Ok(());
     }
@@ -82,9 +87,16 @@ impl linux_kernel_module::KernelModule for UncrashableModule {
             linux_kernel_module::chrdev::builder(cstr!("uncrashablemodule"), 0..1)?
                 .register_device::<WriteFile>()
                 .build()?;
+        println!("Successfuly initialized rust kernel module.");
         Ok(UncrashableModule {
             _chrdev_registration: chrdev_registration,
         })
+    }
+}
+
+impl Drop for UncrashableModule{
+    fn drop(&mut self){
+        println!("Successfully unloaded rust kernel module.");
     }
 }
 
@@ -98,13 +110,6 @@ fn vec_to_string (v: Vec<u8>) -> String {
     s
 }
 
-//This function will open the file /sys/fs/resctrl/tasks in order to check whether the process corresponding to pid is currently running and assigned to the default resctrl resource group
-fn check_process_status(pid: i32) -> linux_kernel_module::KernelResult<bool> {
-    //attempting to read and open /sys/fs/resctrl
-    //let contents = 
-
-    Ok(false)
-}
 
 
 
