@@ -78,6 +78,7 @@ impl linux_kernel_module::file_operations::Write for WriteFile {
         //writing values to all cpu MSRs
             msr::write_all_cpus(IA32_L3_QOS_MASK_0, CLOS0_BIT_MASK, CLOS0_BIT_MASK);
             msr::write_all_cpus(IA32_L3_QOS_MASK_1, CLOS1_BIT_MASK, CLOS1_BIT_MASK);
+            println!("Wrote to MSRs");
 
 
         //Now, we will flush the entire cache using the wbinvd assembly instruction
