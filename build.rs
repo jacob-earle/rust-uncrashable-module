@@ -7,7 +7,7 @@ use std::path::PathBuf;
 use std::process::Command;
 use std::{env, fs};
 
-const INCLUDED_TYPES: &[&str] = &["file_system_type", "mode_t", "umode_t", "ctl_table"];
+const INCLUDED_TYPES: &[&str] = &["file_system_type", "mode_t", "umode_t", "ctl_table", "c_msr"];
 const INCLUDED_FUNCTIONS: &[&str] = &[
     "cdev_add",
     "cdev_init",
@@ -28,6 +28,8 @@ const INCLUDED_FUNCTIONS: &[&str] = &[
     "wait_for_random_bytes",
     "get_random_bytes",
     "rng_is_initialized",
+    "on_each_cpu",
+    "my_wrmsr"
 ];
 const INCLUDED_VARS: &[&str] = &[
     "EINVAL",
@@ -168,6 +170,10 @@ fn main() {
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
     bindings
         .write_to_file(out_path.join("bindings.rs"))
+        .expect("Couldn't write bindings!");
+
+    bindings
+        .write_to_file("/home/jacob/rust-uncrashable-module/bindingsexposed.rs")
         .expect("Couldn't write bindings!");
 
     handle_kernel_version_cfg(&out_path.join("bindings.rs"));
