@@ -29,7 +29,8 @@ const INCLUDED_FUNCTIONS: &[&str] = &[
     "get_random_bytes",
     "rng_is_initialized",
     "on_each_cpu",
-    "my_wrmsr"
+    "my_wrmsr",
+    "assign_closid"
 ];
 const INCLUDED_VARS: &[&str] = &[
     "EINVAL",

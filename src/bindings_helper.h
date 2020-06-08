@@ -7,6 +7,8 @@
 #include <linux/version.h>
 #include <linux/smp.h>
 #include <asm/msr.h>
+#include <linux/sched.h>
+#include <asm/intel_rdt_sched.h>
 
 
 
@@ -21,8 +23,22 @@ typedef struct c_msr {
     u64 val;
 } c_msr;
 
+//this is a wrapper around the wrmsr function defined in asm/msr.h so that we can call it on all cpus
 void my_wrmsr(void * arg){
     c_msr * args = (c_msr *) arg;
     wrmsrl(args->msr, args->val);
     printk(KERN_INFO "Hello from wrmsr.\nWrote %llx to register %x.", args->val, args->msr);
+}
+
+
+//function that will assign the CLOSid specified in closid_new to the task corresponding to the pid pid_int
+void assign_closid(int pid_int, u32 closid_new){
+    pid_t pid = (pid_t) pid_int;
+    struct task_struct * task = pid_task(find_vpid(pid), PIDTYPE_PID);
+    if(task == NULL){
+        //task could not be found, so ignore changing the closid
+        return;
+    }
+    //write the new closid
+    task -> closid = closid_new;
 }

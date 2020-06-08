@@ -26910,6 +26910,9 @@ fn bindgen_test_layout_c_msr() {
 extern "C" {
     pub fn my_wrmsr(arg: *mut c_types::c_void);
 }
+extern "C" {
+    pub fn assign_closid(pid_int: c_types::c_int, closid_new: u32);
+}
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone)]
 pub struct module_sect_attrs {

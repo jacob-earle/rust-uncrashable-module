@@ -13,8 +13,8 @@ use linux_kernel_module::{self, cstr, println};
 pub mod msr;
 
 //defining important constants
-static CLOS0_CPU_MASK: u32 = 0xfffeu32;
-static CLOS1_CPU_MASK: u32 = 0x1u32;
+//static CLOS0_CPU_MASK: u32 = 0xfffeu32;
+//static CLOS1_CPU_MASK: u32 = 0x1u32;
 static CLOS0_BIT_MASK: u64 = 0b11111111110u64;
 static CLOS1_BIT_MASK: u64 = 0b00000000001u64;
 static DEFAULT_BIT_MASK: u64 = 0b11111111111u64;
@@ -81,6 +81,8 @@ impl linux_kernel_module::file_operations::Write for WriteFile {
             msr::write_all_cpus(IA32_L3_QOS_MASK_1, CLOS1_BIT_MASK);
             println!("Wrote to MSRs");
 
+            //Assigning our task to the closid 1
+            linux_kernel_module::bindings::assign_closid(pid as linux_kernel_module::c_types::c_int, 1 as u32);
 
         //Now, we will flush the entire cache using the wbinvd assembly instruction
         //WBINVD is described here: https://www.felixcloutier.com/x86/wbinvd

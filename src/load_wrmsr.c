@@ -18,4 +18,5 @@ void cleanup_module(void)
 }
 
 EXPORT_SYMBOL(my_wrmsr);
+EXPORT_SYMBOL(assign_closid);
 MODULE_LICENSE("GPL");
