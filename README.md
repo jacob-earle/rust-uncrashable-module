@@ -26,12 +26,12 @@ make
 If this worked correctly, you should see that the kernel module compiled as uncrashablemodule.ko. Then, to quickly load the kernel module and mount its associated character device, run the provided script
 ```
 chmod +x load_module.sh
-./load_module.sh
+make load
 ```
 To unload the module and remove the character device, run the provided script
 ```
 chmod +x unload_module.sh
-./unload_module.sh
+make unload
 ```
 
 ## Additional Resources

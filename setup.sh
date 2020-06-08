@@ -2,7 +2,10 @@
 #This short script will install all of the necessary dependencies to compile this project
 #A reboot will necessary in order to change the default kernel that will be downloaded
 #Should be run on a fresh install of Ubuntu Bionic 18.04 without rust installed
-sudo apt install curl llvm clang
+sudo apt install curl llvm clang msr-tools
+
+#The msr kernel module is necessary for using the rdmsr tool
+sudo modprobe msr
 
 #Install rustup in home directory
 cd $HOME
