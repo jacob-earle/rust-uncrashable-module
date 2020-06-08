@@ -26872,19 +26872,18 @@ pub const BINDINGS_GFP_KERNEL: gfp_t = 6291648;
 #[derive(Debug, Default, Copy, Clone)]
 pub struct c_msr {
     pub msr: c_types::c_uint,
-    pub low: u32,
-    pub high: u32,
+    pub val: u64,
 }
 #[test]
 fn bindgen_test_layout_c_msr() {
     assert_eq!(
         ::core::mem::size_of::<c_msr>(),
-        12usize,
+        16usize,
         concat!("Size of: ", stringify!(c_msr))
     );
     assert_eq!(
         ::core::mem::align_of::<c_msr>(),
-        4usize,
+        8usize,
         concat!("Alignment of ", stringify!(c_msr))
     );
     assert_eq!(
@@ -26898,23 +26897,13 @@ fn bindgen_test_layout_c_msr() {
         )
     );
     assert_eq!(
-        unsafe { &(*(::core::ptr::null::<c_msr>())).low as *const _ as usize },
-        4usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(c_msr),
-            "::",
-            stringify!(low)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::core::ptr::null::<c_msr>())).high as *const _ as usize },
+        unsafe { &(*(::core::ptr::null::<c_msr>())).val as *const _ as usize },
         8usize,
         concat!(
             "Offset of field: ",
             stringify!(c_msr),
             "::",
-            stringify!(high)
+            stringify!(val)
         )
     );
 }

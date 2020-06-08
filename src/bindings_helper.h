@@ -18,11 +18,11 @@ const gfp_t BINDINGS_GFP_KERNEL = GFP_KERNEL;
 //The wrapper around wrmsr_safe is necessary because Bindgen cannot create wrappings for inline functions
 typedef struct c_msr {
     unsigned int msr;
-    u32 low;
-    u32 high;
+    u64 val;
 } c_msr;
 
 void my_wrmsr(void * arg){
     c_msr * args = (c_msr *) arg;
-    wrmsr_safe(args->msr, args->low, args->high);
+    wrmsrl(args->msr, args->val);
+    printk(KERN_INFO "Hello from wrmsr.\nWrote %llx to register %x.", args->val, args->msr);
 }
