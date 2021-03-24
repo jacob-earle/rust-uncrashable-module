@@ -1,0 +1,1 @@
+cmd_/home/jacob/rust-uncrashable-module/uncrashable_module/../src/load_wrmsr.mod := { echo  /home/jacob/rust-uncrashable-module/uncrashable_module/../src/load_wrmsr.o; echo; } > /home/jacob/rust-uncrashable-module/uncrashable_module/../src/load_wrmsr.mod

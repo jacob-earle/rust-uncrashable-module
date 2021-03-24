@@ -26913,6 +26913,9 @@ extern "C" {
 extern "C" {
     pub fn assign_closid(pid_int: c_types::c_int, closid_new: u32);
 }
+extern "C" {
+    pub fn check_closid(pid_int: c_types::c_int);
+}
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone)]
 pub struct module_sect_attrs {

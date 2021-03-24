@@ -30,7 +30,8 @@ const INCLUDED_FUNCTIONS: &[&str] = &[
     "rng_is_initialized",
     "on_each_cpu",
     "my_wrmsr",
-    "assign_closid"
+    "assign_closid",
+    "check_closid"
 ];
 const INCLUDED_VARS: &[&str] = &[
     "EINVAL",
